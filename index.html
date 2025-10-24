@@ -29,6 +29,17 @@
         .hover\:bg-primary-dark:hover { background-color: #0099D4; } /* Slightly darker blue for hover */
         .icon-size { width: 32px; height: 32px; stroke-width: 2.5; }
 
+        /* FIX: Logo Circle Styling */
+        .logo-circle {
+            width: 44px; /* Adjust size of the circle container */
+            height: 44px;
+            /* Tailwind classes rounded-full, bg-white, flex, items-center, justify-center handle the rest */
+        }
+        .logo-circle-img {
+            height: 32px; /* Adjust logo image size inside the circle */
+            width: auto;
+        }
+
         /* Fix: Overlapping Header Fix */
         section {
             scroll-margin-top: 100px; 
@@ -96,6 +107,25 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
         }
+        
+        /* MODIFIED style for the clock/date container to manage horizontal alignment */
+        .datetime-container {
+            display: flex; /* Use flex to put them side-by-side */
+            align-items: center; /* Center vertically */
+            gap: 1.5rem; /* Space between date and time */
+            font-family: 'Inter', sans-serif; 
+        }
+        
+        /* Adjust font size for date for better visual balance */
+        #digital-date {
+            font-size: 1.25rem; /* Equivalent to text-xl */
+            font-weight: 500; /* Medium weight */
+        }
+        
+        /* Adjust font size for clock for better visual balance */
+        #digital-clock {
+             font-size: 2rem; /* Equivalent to text-3xl or larger */
+        }
     </style>
     <script>
         // Fisher-Yates (Knuth) Shuffle algorithm for randomizing slides
@@ -106,27 +136,51 @@
             }
         }
 
-        // Clock update function confirmed and integrated.
-        function updateClock() {
+        // Clock and Date update function for Nigeria Time
+        function updateDateTime() {
+            // Options for formatting the date
+            const dateOptions = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                timeZone: 'Africa/Lagos' // Nigeria time zone
+            };
+            
+            // Options for formatting the time (clock)
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false, // 24-hour format
+                timeZone: 'Africa/Lagos' // Nigeria time zone
+            };
+
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const timeString = `${hours}:${minutes}:${seconds}`;
+            
+            // Format date and time for display
+            const dateString = now.toLocaleDateString('en-US', dateOptions);
+            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+
+            const dateElement = document.getElementById('digital-date');
             const clockElement = document.getElementById('digital-clock');
+
+            if (dateElement) {
+                dateElement.textContent = dateString;
+            }
             if (clockElement) {
                 clockElement.textContent = timeString;
             }
         }
         
-        // Slider Implementation - Using Imgur URLs and randomization
+        // FIX 2 & 3: Slider Implementation - Updated with Imgur URLs and will be shuffled
         const slides = [
             'https://i.imgur.com/1BT4PGW.jpeg', 
             'https://i.imgur.com/sANo5BG.jpeg', 
             'https://i.imgur.com/pnRD6FC.jpeg',
             'https://i.imgur.com/IZ6SBSJ.jpeg',
             'https://i.imgur.com/REbgMKJ.jpeg',
-            'https://i.imgur.com/REbgMKJ.jpeg' 
+            'https://i.imgur.com/REbgMKJ.jpeg' // Note: Used REbgMKJ twice as only 5 unique links were provided.
         ];
 
         
@@ -146,6 +200,7 @@
             slides.forEach((url, index) => {
                 const slideDiv = document.createElement('div');
                 slideDiv.className = 'slide';
+                // Note: Imgur links should be publicly accessible and generally work well here.
                 slideDiv.style.backgroundImage = `url('${url}')`;
                 slideDiv.id = `slide-${index}`;
                 sliderContainer.appendChild(slideDiv);
@@ -225,19 +280,18 @@
                 observer.observe(section);
             });
 
-             // Initialize icons AFTER THE DOM IS FULLY LOADED
+             // Initialize icons after page load
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
 
-            // Start Clock and Slider
-            updateClock();
-            setInterval(updateClock, 1000); // Update clock every second
+            // FIX: Start Clock and Slider
+            updateDateTime();
+            setInterval(updateDateTime, 1000); // Update clock every second
             startSlider(); 
         }
 
-        // FIX: Change window.onload to addEventListener('load') for better compatibility
-        window.addEventListener('load', setupNavigation);
+        window.onload = setupNavigation;
     </script>
 </head>
 
@@ -247,11 +301,16 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             
             <a href="#home" class="text-3xl font-extrabold flex items-center space-x-2">
-                <img src="https://i.imgur.com/GO5nH8V.png" alt="BamTech Limited Logo" class="h-10 w-auto mr-2"> 
+                <div class="logo-circle bg-white rounded-full p-2 flex items-center justify-center mr-2">
+                    <img src="https://i.imgur.com/GO5nH8V.png" alt="BamTech Limited Logo" class="logo-circle-img"> 
+                </div>
                 <span class="sr-only">BamTech Limited</span> 
             </a>
-
-            <div id="digital-clock" class="text-2xl font-mono text-primary hidden sm:block">00:00:00</div>
+            
+            <div class="datetime-container hidden sm:flex">
+                <div id="digital-date" class="font-semibold text-gray-400">Friday, October 24, 2025</div>
+                <div id="digital-clock" class="font-mono text-primary">00:00:00</div>
+            </div>
 
             <button id="menu-toggle" class="md:hidden p-2 rounded-md hover:bg-gray-700 focus:outline-none">
                 <i id="open-icon" data-lucide="menu" class="icon-size w-6 h-6 text-white menu-icon-open"></i>
@@ -270,11 +329,11 @@
     </header>
 
     <main class="pt-16">
-        <section id="home" class="hero-bg min-h-screen flex items-center p-8">
+        <section id="home" class="hero-bg min-h-screen flex flex-col justify-end p-8">
             <div id="slider-container" class="slider-container">
-                </div>
+            </div>
             
-            <div class="hero-content max-w-4xl mx-auto py-24 sm:py-32">
+            <div class="hero-content max-w-4xl mx-auto py-24 sm:py-32 z-10">
                 <p class="text-primary text-xl font-semibold mb-4 tracking-wider uppercase">BamTech Limited</p>
                 <h1 class="text-5xl sm:text-6xl lg:text-6xl font-extrabold text-white mb-6 leading-tight whitespace-nowrap">
                     Protecting Your Digital Future
@@ -347,7 +406,7 @@
                     
                     <div class="bg-background-darker p-8 rounded-xl shadow-2xl border-t-4 border-primary transition duration-300 hover:scale-[1.01] text-left">
                         <i data-lucide="cloud-cog" class="icon-size text-primary mb-4"></i>
-                        <h3 class="2xl font-bold text-white mb-3">Cloud Migration</h3>
+                        <h3 class="text-2xl font-bold text-white mb-3">Cloud Migration</h3>
                         <p class="text-gray-400 leading-relaxed">Seamless and secure transition of your applications and data to leading cloud platforms like AWS, Azure, and Google Cloud.</p>
                     </div>
                     
@@ -376,7 +435,7 @@
                     </div>
                     
                     <div class="bg-background-darker p-8 rounded-xl shadow-2xl border-t-4 border-primary transition duration-300 hover:scale-[1.01] text-left">
-                        <i data-lucide="monitor-shield" class="icon-size text-primary mb-4"></i>
+                        <i data-lucide="laptop" class="icon-size text-primary mb-4"></i>
                         <h3 class="text-2xl font-bold text-white mb-3">Endpoint Protection</h3>
                         <p class="text-gray-400 leading-relaxed">Advanced security for devices (laptops, servers, mobile) against malware, ransomware, and zero-day threats using EDR solutions.</p>
                     </div>
@@ -413,7 +472,7 @@
                     
                     <div class="bg-background-darker p-8 rounded-xl shadow-2xl border-t-4 border-primary transition duration-300 hover:scale-[1.01] text-left">
                         <i data-lucide="graduation-cap" class="icon-size text-primary mb-4"></i>
-                        <h3 class="2xl font-bold text-white mb-3">Security Training</h3>
+                        <h3 class="text-2xl font-bold text-white mb-3">Security Training</h3>
                         <p class="text-gray-400 leading-relaxed">Empower your staff with tailored awareness programs to recognize and prevent cyber threats.</p>
                     </div>
                     
@@ -431,7 +490,7 @@
 
                     <div class="bg-background-darker p-8 rounded-xl shadow-2xl border-t-4 border-primary transition duration-300 hover:scale-[1.01] text-left">
                         <i data-lucide="cpu" class="icon-size text-primary mb-4"></i>
-                        <h3 class="2xl font-bold text-white mb-3">Advanced Threat Intelligence</h3>
+                        <h3 class="text-2xl font-bold text-white mb-3">Advanced Threat Intelligence</h3>
                         <p class="text-gray-400 leading-relaxed">Proactive monitoring and actionable alerts to detect, analyze, and neutralize potential threats swiftly.</p>
                     </div>
                 </div>
@@ -553,7 +612,7 @@
                     <div>
                         <div class="bg-background-darker p-8 rounded-xl shadow-2xl border border-gray-700">
                             <h3 class="text-3xl font-bold text-white mb-6">Send Us a Message</h3>
-                            <form name="contact" method="POST" data-netlify="true" class="space-y-6">
+                            <form action="YOUR_FORM_SUBMISSION_ENDPOINT" method="POST" class="space-y-6">
                                 <div>
                                     <label for="name" class="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
                                     <input type="text" id="name" name="name" placeholder="John Doe" required
@@ -584,8 +643,11 @@
 
     <footer class="bg-background-darker border-t border-gray-800 py-8">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
             <div class="flex items-center justify-center mb-4">
-                <img src="https://i.imgur.com/GO5nH8V.png" alt="BamTech Limited Logo" class="h-10 w-auto mr-2">
+                <div class="logo-circle bg-white rounded-full p-2 flex items-center justify-center mr-2">
+                    <img src="https://i.imgur.com/GO5nH8V.png" alt="BamTech Limited Logo" class="logo-circle-img">
+                </div>
                 <p class="text-2xl font-extrabold text-white">BAM<span class="text-primary">TECH.</span></p>
             </div>
 
@@ -606,5 +668,11 @@
             document.getElementById('year').textContent = new Date().getFullYear();
         </script>
     </footer>
+
+    <script>
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
